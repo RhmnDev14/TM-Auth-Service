@@ -4,6 +4,7 @@ import (
 	"auth-service/internal/dto"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -52,6 +53,15 @@ func GetEnvDuration(key string) time.Duration {
 // WriteJSON adalah helper untuk menulis respons JSON
 func WriteJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
+
+	// Log the status code being written
+	log.Printf("🔘 Response status code: %d\n", status)
+
+	// If status is not 200, log the data
+	if status != 200 {
+		log.Printf("⚠️ Response data: %+v\n", data)
+	}
+
 	w.WriteHeader(status)
 
 	if msg, ok := data.(string); ok {

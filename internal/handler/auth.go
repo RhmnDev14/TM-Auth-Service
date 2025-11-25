@@ -6,6 +6,7 @@ import (
 	"auth-service/internal/usecase"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -24,6 +25,8 @@ func (h *AuthHandler) SetupRoutes() {
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	log.Printf("🔘 API: %s %s", r.Method, r.URL.Path)
+
 	if r.Method != http.MethodPost {
 		helper.WriteJSON(w, http.StatusMethodNotAllowed, helper.MethodNotAllowed)
 		return
@@ -50,6 +53,8 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+	log.Printf("🔘 API: %s %s", r.Method, r.URL.Path)
+
 	if r.Method != http.MethodPost {
 		helper.WriteJSON(w, http.StatusMethodNotAllowed, helper.MethodNotAllowed)
 		return
@@ -70,7 +75,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	helper.WriteJSON(w, http.StatusCreated, dto.Response{
+	helper.WriteJSON(w, http.StatusOK, dto.Response{
 		Status:  http.StatusOK,
 		Message: helper.Succes,
 		Data:    result,
