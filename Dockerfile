@@ -1,32 +1,36 @@
-# ==============================
-# Stage 1: Build the Go binary
-# ==============================
-FROM golang:1.25 AS builder
+# syntax=docker/dockerfile:1
+# ------------------------
+# Builder stage
+FROM golang:1.25-alpine AS builder
+
+# Install dependencies
+RUN apk add --no-cache git make
 
 WORKDIR /app
 
-# Copy go mod and download dependencies
+# Copy go.mod and go.sum for caching
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the rest of the code
+# Copy source code
 COPY . .
 
-# Build binary
-RUN go build -o main .
+# Build Go app (statically linked)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
 
-# ==============================
-# Stage 2: Run the application
-# ==============================
-FROM gcr.io/distroless/base-debian12
+# ------------------------
+# Final image
+FROM alpine:3.18
+
+RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 
-# Copy the binary from builder stage
+# Copy built binary
 COPY --from=builder /app/main .
 
 # Expose port
 EXPOSE 8080
 
-# Run
-CMD ["/app/main"]
+# Run the app
+ENTRYPOINT ["./main"]

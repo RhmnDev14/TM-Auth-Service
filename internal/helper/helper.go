@@ -11,57 +11,64 @@ import (
 	"time"
 )
 
-// GetEnvRequired mengambil nilai dari environment variable. Jika kosong, ia akan panic.
-func GetEnvRequired(key string) string {
+// GetEnvString mengambil environment variable, jika tidak ada, log warning dan kembalikan string kosong.
+func GetEnvString(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		panic(fmt.Sprintf("FATAL: Environment variable %s is required and not set", key))
+		log.Printf("⚠️  Warning: Environment variable %s not set\n", key)
 	}
 	return value
 }
 
-// GetEnvInt mengambil nilai int dari environment variable.
+// GetEnvInt mengambil environment variable int, jika tidak valid atau kosong, log warning dan kembalikan 0.
 func GetEnvInt(key string) int {
-	value := GetEnvRequired(key)
+	value := os.Getenv(key)
+	if value == "" {
+		log.Printf("⚠️  Warning: Environment variable %s not set\n", key)
+		return 0
+	}
 	i, err := strconv.Atoi(value)
 	if err != nil {
-		panic(fmt.Sprintf("FATAL: Environment variable %s must be an integer: %v", key, err))
+		log.Printf("⚠️  Warning: Environment variable %s must be an integer\n", key)
+		return 0
 	}
 	return i
 }
 
-// GetEnvBool mengambil nilai boolean dari environment variable.
+// GetEnvBool mengambil environment variable boolean, jika tidak valid atau kosong, log warning dan kembalikan false.
 func GetEnvBool(key string) bool {
-	value := GetEnvRequired(key)
+	value := os.Getenv(key)
+	if value == "" {
+		log.Printf("⚠️  Warning: Environment variable %s not set\n", key)
+		return false
+	}
 	b, err := strconv.ParseBool(value)
 	if err != nil {
-		panic(fmt.Sprintf("FATAL: Environment variable %s must be a boolean (true/false): %v", key, err))
+		log.Printf("⚠️  Warning: Environment variable %s must be a boolean (true/false)\n", key)
+		return false
 	}
 	return b
 }
 
-// GetEnvDuration mengambil nilai duration dari environment variable.
+// GetEnvDuration mengambil environment variable int dalam menit, dikonversi ke time.Duration.
+// Jika tidak valid atau kosong, log warning dan kembalikan 0.
 func GetEnvDuration(key string) time.Duration {
-	value := GetEnvInt(key)
-	if value <= 0 {
-		panic(fmt.Sprintf("FATAL: Environment variable %s must be a positive integer", key))
+	value := os.Getenv(key)
+	if value == "" {
+		log.Printf("⚠️  Warning: Environment variable %s not set\n", key)
+		return 0
 	}
-	// Konversi nilai integer (menit) ke time.Duration
-	return time.Duration(value) * time.Minute
+	i, err := strconv.Atoi(value)
+	if err != nil || i <= 0 {
+		log.Printf("⚠️  Warning: Environment variable %s must be a positive integer\n", key)
+		return 0
+	}
+	return time.Duration(i) * time.Minute
 }
 
 // WriteJSON adalah helper untuk menulis respons JSON
 func WriteJSON(w http.ResponseWriter, status int, data any) {
 	w.Header().Set("Content-Type", "application/json")
-
-	// Log the status code being written
-	log.Printf("🔘 Response status code: %d\n", status)
-
-	// If status is not 200, log the data
-	if status != 200 {
-		log.Printf("⚠️ Response data: %+v\n", data)
-	}
-
 	w.WriteHeader(status)
 
 	if msg, ok := data.(string); ok {
@@ -77,4 +84,12 @@ func WriteJSON(w http.ResponseWriter, status int, data any) {
 
 func ErrorHandle(param error) error {
 	return fmt.Errorf("ERROR : %v", param)
+}
+
+func ParseUint(s string) (uint, error) {
+	val, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint(val), nil
 }

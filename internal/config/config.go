@@ -2,7 +2,7 @@ package config
 
 import (
 	"auth-service/internal/helper"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -43,18 +43,18 @@ type Config struct {
 func NewConfig() *Config {
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
-		panic("⚠️  Warning: .env file not found, using system environment variables")
+		log.Println("⚠️  Warning: .env file not found, using system environment variables")
 	}
 
 	var cfg Config
 
 	// Load DBConfig
 	cfg.DBConfig = DBConfig{
-		Host:        helper.GetEnvRequired("DB_HOST"),
-		Port:        helper.GetEnvRequired("DB_PORT"),
-		User:        helper.GetEnvRequired("DB_USER"),
-		Password:    helper.GetEnvRequired("DB_PASSWORD"),
-		Name:        helper.GetEnvRequired("DB_NAME"),
+		Host:        helper.GetEnvString("DB_HOST"),
+		Port:        helper.GetEnvString("DB_PORT"),
+		User:        helper.GetEnvString("DB_USER"),
+		Password:    helper.GetEnvString("DB_PASSWORD"),
+		Name:        helper.GetEnvString("DB_NAME"),
 		LogMode:     helper.GetEnvBool("DB_LOG_MODE"),
 		MaxIdle:     helper.GetEnvInt("DB_MAX_IDLE_CONNS"),
 		MaxOpen:     helper.GetEnvInt("DB_MAX_OPEN_CONNS"),
@@ -64,14 +64,14 @@ func NewConfig() *Config {
 
 	// Load PortConfig
 	cfg.PortConfig = PortConfig{
-		ServerPort: helper.GetEnvRequired("SERVER_PORT"),
+		ServerPort: helper.GetEnvString("SERVER_PORT"),
 	}
 
 	//  Load TokenConfig
-	jwtSecret := helper.GetEnvRequired("TOKEN_SECRET")
+	jwtSecret := helper.GetEnvString("TOKEN_SECRET")
 
 	cfg.TokenConfig = TokenConfig{
-		IssuerName:     helper.GetEnvRequired("TOKEN_ISSUE"),
+		IssuerName:     helper.GetEnvString("TOKEN_ISSUE"),
 		JwtSignatureKy: []byte(jwtSecret),
 		// TOKEN_EXPIRE & REFRESH_TOKEN_EXPIRE nilainya integer dalam MENIT
 		JwtExpiresTime:          helper.GetEnvDuration("TOKEN_EXPIRE"),
@@ -80,17 +80,12 @@ func NewConfig() *Config {
 	}
 
 	// Validasi
-	if err := cfg.validate(); err != nil {
-		panic(fmt.Sprintf("FATAL: Configuration validation failed: %v", err))
-	}
-
+	cfg.validate()
 	return &cfg
 }
 
-func (c *Config) validate() error {
+func (c *Config) validate() {
 	if len(c.TokenConfig.JwtSignatureKy) == 0 {
-		return fmt.Errorf("JWT signature key is required")
+		log.Println("⚠️  Warning: JWT signature key is empty")
 	}
-
-	return nil
 }

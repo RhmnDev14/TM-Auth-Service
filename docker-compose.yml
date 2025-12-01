@@ -1,37 +1,16 @@
-version: '3.9'
+version: "3.9"
 
 services:
-  auth-service:
-    build: .
-    container_name: auth-service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: be_auth_service_tm
     ports:
-      - "8080:8080"
-    env_file:
-      - .env
-    depends_on:
-      - db
-    restart: always
+      - "${SERVER_PORT}:${SERVER_PORT}"
     networks:
-      - auth-network
-
-  db:
-    image: postgres:16
-    container_name: postgres-auth
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-    networks:
-      - auth-network
-
-volumes:
-  postgres_data:
+      - database_network
 
 networks:
-  auth-network:
-    driver: bridge
+  database_network:
+    external: true   
