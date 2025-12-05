@@ -70,7 +70,7 @@ func NewServer() *Server {
 	cfg := config.NewConfig()
 
 	// Koneksi Database (Menggunakan GORM dan driver Postgres)
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		cfg.DBConfig.Host, cfg.DBConfig.User, cfg.DBConfig.Password, cfg.DBConfig.Name, cfg.DBConfig.Port)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
